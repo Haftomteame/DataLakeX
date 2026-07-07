@@ -11,3 +11,7 @@ desktop.ini
 
 # Dossiers temporaires Windows
 ~$*
+
+# Documents de cours (hors dépôt)
+cours_spark_monitoring*
+sujet_crunch*
