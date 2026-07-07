@@ -1,0 +1,67 @@
+# ── Données volumineuses / générées localement ───────────────────────────────
+
+# Données brutes (≈ 5 Go) : jamais dans git
+data/raw/
+
+# Archives gzip (sécurité si téléchargées ailleurs)
+*.gz
+
+# Journaux d'événements Spark (History Server)
+data/spark-events/*
+!data/spark-events/.gitkeep
+*.inprogress
+
+# Sorties de runs : le manifeste runs.csv EST versionné (preuve des mesures),
+# les dossiers horodatés aussi (petits : 7 à 100 lignes chacun)
+
+# ── Python ───────────────────────────────────────────────────────────────────
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.Python
+
+.venv/
+venv/
+ENV/
+env/
+
+.env
+.env.*
+!.env.example
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# ── OS ───────────────────────────────────────────────────────────────────────
+
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ── IDE / éditeurs ───────────────────────────────────────────────────────────
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-*
+
+# ── Logs & exports ───────────────────────────────────────────────────────────
+
+*.log
+
+# Rapport : le .md est versionné, le PDF exporté ne l'est pas
+rapport/*.pdf

@@ -1,0 +1,13 @@
+# Ignorer les artefacts locaux à la racine du workspace
+
+.DS_Store
+Thumbs.db
+desktop.ini
+
+.idea/
+.vscode/
+*.swp
+*~
+
+# Dossiers temporaires Windows
+~$*

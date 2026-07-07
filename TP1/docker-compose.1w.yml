@@ -1,0 +1,92 @@
+# crunch — variante 1 worker (2 cœurs au total) : run de référence
+# Démarrage : docker compose -f docker-compose.1w.yml up -d
+# Arrêt     : docker compose -f docker-compose.1w.yml down
+#
+# Seule différence entre les trois variantes : le nombre de services spark-worker-N.
+
+x-spark-worker: &spark-worker
+  image: apache/spark:3.5.1
+  command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077"]
+  environment: &spark-worker-env
+    SPARK_WORKER_CORES: "2"
+    SPARK_WORKER_MEMORY: "2g"
+    SPARK_WORKER_WEBUI_PORT: "8081"
+    SPARK_NO_DAEMONIZE: "1"
+  depends_on:
+    - spark-master
+  volumes:
+    - ./data:/data
+    - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+    - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties:ro
+
+services:
+  spark-master:
+    image: apache/spark:3.5.1
+    container_name: spark-master
+    hostname: spark-master
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master"]
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_LOCAL_HOSTNAME: spark-master
+    ports:
+      - "8080:8080"   # UI + métriques du master
+      - "7077:7077"   # soumission des applications
+      - "4040:4040"   # Spark UI du driver (spark-submit est lancé dans ce conteneur)
+    volumes:
+      - ./data:/data
+      - ./jobs:/app:ro
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf:ro
+      - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties:ro
+
+  spark-worker-1:
+    <<: *spark-worker
+    container_name: spark-worker-1
+    hostname: spark-worker-1
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *spark-worker-env
+      SPARK_LOCAL_HOSTNAME: spark-worker-1
+
+  spark-history:
+    image: apache/spark:3.5.1
+    container_name: spark-history
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.history.HistoryServer"]
+    environment:
+      SPARK_NO_DAEMONIZE: "1"
+      SPARK_HISTORY_OPTS: "-Dspark.history.fs.logDirectory=file:/data/spark-events"
+    ports:
+      - "18080:18080"
+    volumes:
+      - ./data:/data
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    ports:
+      - "8085:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro

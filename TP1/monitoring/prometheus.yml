@@ -1,0 +1,35 @@
+# Prometheus scrape toutes les cibles toutes les 10 s.
+# Les cibles absentes (ex : spark-worker-3 en variante 1w) apparaissent en up == 0 :
+# c'est ce qui alimente le panel « Workers vivants ».
+
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "spark-master"
+    metrics_path: /metrics/master/prometheus
+    static_configs:
+      - targets: ["spark-master:8080"]
+
+  - job_name: "spark-workers"
+    metrics_path: /metrics/prometheus
+    static_configs:
+      - targets:
+          - "spark-worker-1:8081"
+          - "spark-worker-2:8081"
+          - "spark-worker-3:8081"
+          - "spark-worker-4:8081"
+
+  - job_name: "spark-driver"
+    metrics_path: /metrics/prometheus
+    static_configs:
+      - targets: ["spark-master:4040"]   # spark-submit tourne dans le conteneur master
+
+  - job_name: "cadvisor"
+    static_configs:
+      - targets: ["cadvisor:8080"]
